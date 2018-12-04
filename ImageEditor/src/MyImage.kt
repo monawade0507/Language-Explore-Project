@@ -10,7 +10,10 @@ class MyImage {
 	
 	private var image: BufferedImage = BufferedImage(1,1,BufferedImage.TYPE_INT_ARGB)
 	
-	private var pixels: ArrayList<Pixel> = arrayListOf()
+	//private var pixels[][]: List<Pixel>
+	private var rows = Array(1000) {Pixel()}
+	private var columns = Array(1000) {Pixel()}
+	private var grid = Array(1000, {Array(1000) {Pixel()}})
 
 	public fun processImage(name: String): Int {
 		try {
@@ -49,38 +52,74 @@ class MyImage {
 				p.red = red
 				p.green = green
 				p.blue = blue
-				
-				pixels.add(p)
+
+				grid[i][j] = p
 			}
 		}
 	}
 	
 	public fun grayscale() {
-		var index: Int = 0
 		for (i in 0..width-1) {
 			for (j in 0..height-1) {
-				var p: Pixel = pixels[index]
+				var p: Pixel = grid[i][j]
 				
 				var average: Int = (p.red+p.blue+p.green)/3
 				
-				var result: Int = (p.alpha.shr(24)).or(average.shr(16)).or(average.shr(8)).or(average)
+				var result: Int = (p.alpha.shl(24)).or(average.shl(16)).or(average.shl(8)).or(average)
 
 				image.setRGB(i, j, result);
 				
-				index += 1
 			}
 		}
 		
 	}
 	
-	public fun blur() {}
-	public fun rotate() {}
+	public fun contrast() {
+		for (i in 0..width-1) {
+			for (j in 0..height-1) {
+				var p: Pixel = grid[i][j]
+				if(p.red <= (255/2)) p.red = 0
+				else p.red = 255
+				if (p.blue <= (255/2)) p.blue = 0
+				else p.blue = 255
+				if (p.green <= (255/2)) p.green = 0
+				else p.green = 255
+				
+				var result: Int = (p.alpha.shl(24)).or(p.red.shl(16)).or(p.green.shl(8)).or(p.blue)
+				image.setRGB(i, j, result)
+					
+			}
+		}
+	}
+	public fun negate_blue() {
+		for (i in 0..width-1) {
+			for (j in 0..height-1) {
+				var p: Pixel = grid[i][j]
+				p.blue = 255 - p.blue
+				
+				var result: Int = (p.alpha.shl(24)).or(p.red.shl(16)).or(p.green.shl(8)).or(p.blue)
+				image.setRGB(i, j, result)
+			}
+		}
+	}
+	
+	public fun flatten_blue() {
+		for (i in 0..width-1) {
+			for (j in 0..height-1) {
+				var p: Pixel = grid[i][j]
+				p.blue = 0
+				
+				var result: Int = (p.alpha.shl(24)).or(p.red.shl(16)).or(p.green.shl(8)).or(p.blue)
+				image.setRGB(i, j, result)
+			}
+		}
+	}
 	
 		public fun save() {
 		print("Please provide a name for your output image: ")
 		var userInput = readLine()
 		try {
-			val file = File("C:\\Users\\Bethel Tessema\\Documents\\Principles of Programming Languages\\Language-Explore-Project\\ImageEditor\\src\\output.jpg")
+			val file = File("C:\\Users\\Bethel Tessema\\Documents\\Principles of Programming Languages\\Language-Explore-Project\\ImageEditor\\src\\" + userInput)
 			ImageIO.write(image, "jpg", file)
 		} catch(e: javax.imageio.IIOException) {
 			println("Sorry, there was an error saving your image.")
@@ -92,3 +131,5 @@ class MyImage {
 	public fun getHeight(): Int { return height }
 
 }
+
+//turning blue: //var result: Int = (p.alpha.shr(24)).or(average.shr(16)).or(average.shr(8)).or(average)
